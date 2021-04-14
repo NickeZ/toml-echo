@@ -31,8 +31,8 @@ fn main() {
     let tomlfile = match opt.tomlfile {
         Some(file) => {
             // Will only panic if file ends in ".."
-            let has_ancestors = file == file.file_name().unwrap();
-            if !has_ancestors {
+            let has_ancestors = file != file.file_name().unwrap();
+            if has_ancestors {
                 file
             } else if let Some(file) = find_nearest_file(&std::env::current_dir().unwrap(), file) {
                 file
