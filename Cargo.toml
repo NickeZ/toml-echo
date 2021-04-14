@@ -9,5 +9,5 @@ homepage = "https://github.com/nickez/toml-echo"
 repository = "https://github.com/nickez/toml-echo"
 
 [dependencies]
-toml = "0.5.5"
+toml = "0.5"
 structopt = "0.3"
