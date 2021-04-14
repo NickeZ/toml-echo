@@ -8,8 +8,8 @@ use toml::Value;
 #[derive(StructOpt, Debug)]
 #[structopt(name = "toml-echo")]
 struct Opt {
-    #[structopt(long="tomlfile", short="f", parse(from_os_str))]
-    tomlfile: Option<PathBuf>,
+    #[structopt(name="TOMLFILE", parse(from_os_str))]
+    tomlfile: PathBuf,
     #[structopt(name = "QUERY")]
     query: String,
 }
@@ -28,27 +28,21 @@ fn find_nearest_file<F: AsRef<OsStr>>(path: &Path, filename: F) -> Option<PathBu
 fn main() {
     let opt = Opt::from_args();
 
-    let tomlfile = match opt.tomlfile {
-        Some(file) => {
-            // Will only panic if file ends in ".."
-            let has_ancestors = file != file.file_name().unwrap();
-            if has_ancestors {
-                file
-            } else if let Some(file) = find_nearest_file(&std::env::current_dir().unwrap(), file) {
-                file
-            } else {
-                eprintln!("No tomfile found");
-                return
-            }
-        },
-        None => {
+    // Will only panic if tomlfile ends in ".."
+    let has_ancestors = opt.tomlfile != opt.tomlfile.file_name().unwrap();
+
+    let mut path = opt.tomlfile;
+    if !has_ancestors {
+        path = if let Some(file) = find_nearest_file(&std::env::current_dir().unwrap(), path) {
+            file
+        } else {
             eprintln!("No tomfile found");
             return
-        },
-    };
+        };
+    }
 
     let mut file_content = String::new();
-    match File::open(tomlfile) {
+    match File::open(path) {
         Ok(mut f) => {
             if let Err(e) = f.read_to_string(&mut file_content) {
                 eprintln!("Couldn't read file: {}", e);

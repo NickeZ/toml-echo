@@ -15,5 +15,5 @@ separators (e.g. "./Cargo.toml") it will only be searched for in the current wor
 ```sh
 #!/usr/bin/env bash
 
-VERSION=$(toml-echo -f Cargo.toml package.version)
+VERSION=$(toml-echo Cargo.toml package.version)
 ```
