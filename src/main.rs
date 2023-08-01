@@ -1,17 +1,23 @@
+use std::ffi::OsStr;
 use std::fs::File;
 use std::io::Read;
-use std::ffi::OsStr;
-use std::path::{Path,PathBuf};
+use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 use toml::Value;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "toml-echo")]
 struct Opt {
-    #[structopt(name="TOMLFILE", parse(from_os_str))]
+    #[structopt(name = "TOMLFILE", parse(from_os_str))]
     tomlfile: PathBuf,
     #[structopt(name = "QUERY")]
     query: String,
+    #[structopt(
+        short = "q",
+        long = "quiet",
+        help = "Don't print output but exit with 0 if the query is non-empty"
+    )]
+    is_quiet: bool,
 }
 
 fn find_nearest_file<F: AsRef<OsStr>>(path: &Path, filename: F) -> Option<PathBuf> {
@@ -26,6 +32,11 @@ fn find_nearest_file<F: AsRef<OsStr>>(path: &Path, filename: F) -> Option<PathBu
 }
 
 fn main() {
+    let exit_code = real_main();
+    std::process::exit(exit_code);
+}
+
+fn real_main() -> i32 {
     let opt = Opt::from_args();
 
     // Will only panic if tomlfile ends in ".."
@@ -37,7 +48,7 @@ fn main() {
             file
         } else {
             eprintln!("No tomfile found");
-            return
+            return 2;
         };
     }
 
@@ -46,13 +57,13 @@ fn main() {
         Ok(mut f) => {
             if let Err(e) = f.read_to_string(&mut file_content) {
                 eprintln!("Couldn't read file: {}", e);
-                return;
+                return 4;
             }
-        },
+        }
         Err(e) => {
             eprintln!("Couldn't open file: {}", e);
-            return;
-        },
+            return 8;
+        }
     };
 
     let value = file_content.parse::<Value>().unwrap();
@@ -65,13 +76,26 @@ fn main() {
         // Unwrap never panics because of check above
         inner_value = inner_value.unwrap().get(path);
     }
-    // Unwrap never panics because of check above
-    let inner_value = inner_value.unwrap();
 
-    // Default printer prints strings quoted which we don't want
-    if let Some(value) = inner_value.as_str() {
-        println!("{}", value);
-        return;
-    }
-    println!("{}", inner_value);
+    match inner_value {
+        Some(toml_value) => {
+            if !opt.is_quiet {
+                // Default printer prints strings quoted which we don't want
+                if let Some(value) = toml_value.as_str() {
+                    println!("{}", value);
+                } else {
+                    println!("{}", toml_value);
+                }
+            }
+
+            return 0;
+        }
+        None => {
+            if !opt.is_quiet {
+                eprintln!("No matches in the toml file")
+            }
+
+            return 1;
+        }
+    };
 }
