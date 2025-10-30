@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
-use toml::Value;
+use toml::Table;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "toml-echo")]
@@ -66,7 +66,7 @@ fn real_main() -> i32 {
         }
     };
 
-    let value = file_content.parse::<Value>().unwrap();
+    let value = file_content.parse::<Table>().unwrap();
     let mut inner_value = None;
     for path in opt.query.split('.') {
         if inner_value.is_none() {
@@ -88,14 +88,14 @@ fn real_main() -> i32 {
                 }
             }
 
-            return 0;
+            0
         }
         None => {
             if !opt.is_quiet {
                 eprintln!("No matches in the toml file")
             }
 
-            return 1;
+            1
         }
-    };
+    }
 }

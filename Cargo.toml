@@ -2,12 +2,12 @@
 name = "toml-echo"
 version = "0.4.0"
 authors = ["Niklas Claesson <niklas@dusenlund.se>"]
-edition = "2018"
+edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "Tool for printing toml variables"
 homepage = "https://github.com/nickez/toml-echo"
 repository = "https://github.com/nickez/toml-echo"
 
 [dependencies]
-toml = "0.7.5"
+toml = "0.9.8"
 structopt = "0.3"
